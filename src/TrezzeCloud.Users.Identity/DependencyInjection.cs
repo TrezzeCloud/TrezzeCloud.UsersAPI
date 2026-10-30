@@ -58,7 +58,7 @@ public static class DependencyInjection
         return services;
     }
 
-    public static async Task SeedIdentityAsync(IServiceProvider serviceProvider)
+    public static async Task SeedIdentityAsync(IServiceProvider serviceProvider, bool seedTestUser = true)
     {
         using var scope = serviceProvider.CreateScope();
 
@@ -127,6 +127,9 @@ public static class DependencyInjection
         {
             await userManager.AddToRoleAsync(admin, UserRoleEnum.Admin.ToString());
         }
+
+        if (!seedTestUser)
+            return;
 
         var testUser = await userManager.FindByEmailAsync(testUserOptions.Email);
 

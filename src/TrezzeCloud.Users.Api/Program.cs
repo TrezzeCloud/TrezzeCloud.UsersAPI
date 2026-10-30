@@ -69,6 +69,6 @@ app.MapControllers();
 
 app.MapScalarApiReference();
 
-await DependencyInjection.SeedIdentityAsync(app.Services);
+await DependencyInjection.SeedIdentityAsync(app.Services, app.Environment.IsDevelopment());
 
 app.Run();
