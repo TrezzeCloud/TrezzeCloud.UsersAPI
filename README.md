@@ -56,19 +56,41 @@ O serviço cria automaticamente os usuários de seed no startup.
 
 - Name: TrezzeCloud Admin
 - Email: admin@trezzecloud.com
-- Password (dev/local): Admin@123
+- Password (dev/local): definida por cada integrante via User Secrets, não versionada
 
 ### Teste (compartilhado com CatalogAPI)
 
 - Id: aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
 - Name: Usuario Teste
 - Email: teste@trezzecloud.com
-- Password (dev/local): Teste@123
+- Password (dev/local): definida por cada integrante via User Secrets, não versionada
 
-### Segurança
+### Segurança e configuração local
 
-- Nunca use essas credenciais padrão em produção.
-- Em ambientes não locais, sobrescreva os valores via variáveis de ambiente e secret manager.
+Os arquivos `appsettings.json` e `appsettings.Development.json` **não contêm credenciais**. O projeto já define `UserSecretsId`, então não execute `dotnet user-secrets init` novamente.
+
+Para desenvolvimento, configure os segredos do projeto `src/TrezzeCloud.Users.Api` via `dotnet user-secrets set` ou no Visual Studio em **Gerenciar Segredos do Usuário**:
+
+| Chave | Valor necessário (não versionar) |
+|---|---|
+| `ConnectionStrings:UsersDatabase` | String SQL Server da máquina |
+| `Jwt:SecretKey` | Chave aleatória longa; **a mesma configurada na CatalogAPI** |
+| `AdminUser:Password` | Senha forte e exclusiva do administrador local |
+| `TestUser:Password` | Senha do usuário fictício de testes locais |
+| `RabbitMq:Username` | Usuário do RabbitMQ |
+| `RabbitMq:Password` | Senha do RabbitMQ |
+
+Exemplo **sem credenciais reais** para visualizar o local correto:
+
+```powershell
+dotnet user-secrets list --project src/TrezzeCloud.Users.Api
+```
+
+O `dotnet user-secrets` é adequado apenas para desenvolvimento: não criptografa os valores. Não compartilhe o arquivo de segredos nem coloque senhas em commits, screenshots ou arquivos YAML. Em Kubernetes, as credenciais são injetadas através dos Secrets existentes; nenhum Secret do AKS precisa ser recriado nesta etapa.
+
+Para preservar a segurança, o CI executa `scripts/check-appsettings-secrets.py` (impede credenciais em `appsettings*.json`) e Trivy na imagem Docker (relatório informativo de vulnerabilidades HIGH/CRITICAL). O scan não substitui a atualização das dependências afetadas.
+
+**Importante:** senhas e chave JWT antes presentes em arquivos versionados continuam no histórico Git. Se elas foram utilizadas fora de ambientes locais isolados, devem ser rotacionadas de maneira coordenada, preservando os serviços que compartilham a chave.
 
 ---
 
